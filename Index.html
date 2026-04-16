@@ -1,106 +1,112 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CPM Pass Changer</title>
+    <title>CPM Turbo Copy Pro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { background: #0f0f0f; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; }
-        .box { max-width: 600px; margin: auto; background: #1a1a1a; padding: 25px; border-radius: 15px; border: 1px solid #333; }
-        h2 { color: #bb86fc; margin-bottom: 20px; }
-        
-        /* 500 അക്കൗണ്ട്സ് കൊള്ളുന്ന സ്പേസ് */
-        textarea { 
-            width: 100%; height: 250px; background: #252525; color: #00ff00; 
-            border: 1px solid #444; border-radius: 8px; padding: 10px; font-family: monospace;
-            resize: vertical; margin-bottom: 15px;
-        }
-
-        /* ന്യൂ പാസ്‌വേഡ് സ്പേസ് */
-        input { 
-            width: 100%; padding: 12px; margin-bottom: 20px; background: #252525; 
-            border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box;
-        }
-
-        /* ചേഞ്ച് പാസ്‌വേഡ് ബട്ടൺ */
-        button { 
-            width: 100%; padding: 15px; background: #03dac6; color: #000; 
-            border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;
-        }
-        button:hover { background: #018786; }
-
-        #status { margin-top: 20px; text-align: left; background: #000; padding: 10px; border-radius: 8px; max-height: 200px; overflow-y: auto; font-size: 13px; }
-        .suc { color: #4caf50; }
-        .err { color: #f44336; }
+        body { background: #0b0b0b; color: #fff; font-family: sans-serif; text-align: center; padding: 15px; }
+        .box { max-width: 550px; margin: auto; background: #151515; padding: 20px; border-radius: 12px; border: 1px solid #00ffcc; box-shadow: 0 0 15px rgba(0,255,204,0.2); }
+        h2 { color: #00ffcc; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
+        textarea { width: 100%; height: 180px; background: #202020; color: #00ff00; border: 1px solid #333; border-radius: 5px; padding: 10px; box-sizing: border-box; margin-bottom: 10px; font-family: monospace; }
+        input { width: 100%; padding: 12px; margin: 5px 0; background: #202020; border: 1px solid #333; color: white; border-radius: 5px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: #00ffcc; }
+        button { width: 100%; padding: 15px; background: #00ffcc; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; transition: 0.3s; }
+        button:hover { background: #00ccaa; }
+        .res-area { margin-top: 20px; text-align: left; background: #000; padding: 10px; border-radius: 5px; border: 1px solid #222; }
+        #status { height: 130px; overflow-y: auto; font-family: monospace; font-size: 11px; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        #successList { height: 150px; width: 100%; background: #111; color: #00ffcc; border: 1px solid #00ffcc; border-radius: 5px; padding: 8px; font-size: 12px; }
+        .suc { color: #00ff00; }
+        .err { color: #ff3333; }
+        .copy-btn { background: #00ffcc; color: #000; padding: 8px 15px; font-size: 13px; font-weight: bold; margin-top: 10px; cursor: pointer; border-radius: 5px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h2>👑 KING PASS CHANGER</h2>
+    <h2>⚡ CPM TURBO MASTER</h2>
+    <textarea id="list" placeholder="Email:OldPass (Paste your list here)"></textarea>
+    <input type="text" id="newpass" placeholder="Enter New Password to Set">
     
-    <textarea id="list" placeholder="Email:Pass (ഓരോ വരിയിലും ഓരോന്ന് വീതം 500 എണ്ണം വരെ പേസ്റ്റ് ചെയ്യാം)"></textarea>
-    
-    <input type="text" id="newpass" placeholder="Enter New Password Here">
-    
-    <select id="ver" style="width:100%; padding:10px; margin-bottom:15px; background:#252525; color:white; border-radius:8px; border:1px solid #444;">
-        <option value="AIzaSyCQDz9rgjgmvmFkvVfmvr2-7fT4tfrzRRQ">CPM 2 (Fastest)</option>
+    <select id="ver" style="width:100%; padding:12px; background:#202020; color:white; border-radius:5px; border:1px solid #333; margin-top:5px;">
+        <option value="AIzaSyCQDz9rgjgmvmFkvVfmvr2-7fT4tfrzRRQ">CPM 2 (Recommended)</option>
         <option value="AIzaSyAe_aOVT1gSfmHKBrorFvX4fRwN5nODXVA">CPM 1</option>
     </select>
 
-    <button onclick="start()">🔥 CHANGE PASSWORDS NOW</button>
+    <button onclick="startTurbo()">🚀 START & GENERATE LIST</button>
 
-    <div id="status">റിസൾട്ട് ഇവിടെ കാണാം...</div>
+    <div class="res-area">
+        <div id="status">Logs will appear here...</div>
+        <p style="font-size: 12px; color: #00ffcc; margin: 5px 0;">✅ SUCCESS LIST (Email:NewPass):</p>
+        <textarea id="successList" readonly placeholder="Result will appear here..."></textarea>
+        <center><div class="copy-btn" onclick="copyResult()">📋 COPY SUCCESS LIST</div></center>
+    </div>
 </div>
 
 <script>
-    async function start() {
-        let list = document.getElementById('list').value.trim().split('\n');
+    async function startTurbo() {
+        let listStr = document.getElementById('list').value.trim();
         let newP = document.getElementById('newpass').value.trim();
         let key = document.getElementById('ver').value;
         let log = document.getElementById('status');
+        let successBox = document.getElementById('successList');
 
-        if (!list[0] || !newP) { alert("അക്കൗണ്ട് ലിസ്റ്റും പുതിയ പാസ്‌വേഡും നൽകുക!"); return; }
+        if (!listStr || !newP) { alert("Data missing!"); return; }
 
-        log.innerHTML = "<b>🚀 പ്രോസസ്സ് തുടങ്ങുന്നു...</b><br>";
+        let list = listStr.split('\n');
+        log.innerHTML = `🚀 Processing ${list.length} accounts...<br>`;
+        successBox.value = ""; 
 
         for (let acc of list) {
-            if (!acc.includes(':')) continue;
-            let [e, p] = acc.split(':');
-            e = e.trim(); p = p.trim();
+            let line = acc.trim();
+            if (!line.includes(':')) continue;
+            let [e, p] = line.split(':');
+            
+            // പാസ്‌വേഡ് മാറുന്ന പ്രോസസ്സ് തുടങ്ങുന്നു
+            processAcc(e.trim(), p.trim(), newP, key, log, successBox);
+            await new Promise(r => setTimeout(r, 80)); // Turbo speed gap
+        }
+    }
 
-            try {
-                // ലോഗിൻ
-                let res1 = await fetch(`https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=${key}`, {
+    async function processAcc(e, p, newP, key, log, successBox) {
+        try {
+            let res1 = await fetch(`https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=${key}`, {
+                method: 'POST',
+                body: JSON.stringify({ email: e, password: p, returnSecureToken: true }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            let d1 = await res1.json();
+
+            if (d1.idToken) {
+                let res2 = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${key}`, {
                     method: 'POST',
-                    body: JSON.stringify({ email: e, password: p, returnSecureToken: true }),
+                    body: JSON.stringify({ idToken: d1.idToken, password: newP, returnSecureToken: true }),
                     headers: { 'Content-Type': 'application/json' }
                 });
-                let data1 = await res1.json();
 
-                if (data1.idToken) {
-                    // പാസ്‌വേഡ് മാറ്റുന്നു
-                    let res2 = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${key}`, {
-                        method: 'POST',
-                        body: JSON.stringify({ idToken: data1.idToken, password: newP, returnSecureToken: true }),
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-
-                    if (res2.ok) {
-                        log.innerHTML += `<span class="suc">✅ DONE: ${e}</span><br>`;
-                    } else {
-                        log.innerHTML += `<span class="err">❌ FAILED: ${e}</span><br>`;
-                    }
+                if (res2.ok) {
+                    log.innerHTML += `<span class="suc">✅ SUCCESS: ${e}</span><br>`;
+                    // റിസൾട്ട് Email:NewPass എന്ന രീതിയിൽ സേവ് ചെയ്യുന്നു
+                    successBox.value += e + ":" + newP + "\n";
                 } else {
-                    log.innerHTML += `<span class="err">⚠️ LOGIN ERROR: ${e}</span><br>`;
+                    log.innerHTML += `<span class="err">❌ FAIL: ${e} (Update Error)</span><br>`;
                 }
-            } catch (err) {
-                log.innerHTML += `<span class="err">❗ ERROR: ${e}</span><br>`;
+            } else {
+                log.innerHTML += `<span class="err">⚠️ LOGIN ERROR: ${e}</span><br>`;
             }
-            // ഗൂഗിൾ ബ്ലോക്ക് ചെയ്യാതിരിക്കാൻ ചെറിയ ഡിലേ
-            await new Promise(r => setTimeout(r, 400));
-            log.scrollTop = log.scrollHeight;
+        } catch (err) {
+            log.innerHTML += `<span class="err">❗ NETWORK ERROR: ${e}</span><br>`;
         }
-        log.innerHTML += "<b>🏁 എല്ലാം കഴിഞ്ഞു!</b>";
+        log.scrollTop = log.scrollHeight;
+        successBox.scrollTop = successBox.scrollHeight;
+    }
+
+    function copyResult() {
+        let copyText = document.getElementById("successList");
+        if (!copyText.value) { alert("Nothing to copy!"); return; }
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        alert("Success list (Email:NewPass) copied!");
     }
 </script>
 
