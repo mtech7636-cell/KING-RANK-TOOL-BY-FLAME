@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CPM Turbo Copy Pro - Multi Mode</title>
+    <title>CPM Turbo Master - Random Mode</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body { background: #0b0b0b; color: #fff; font-family: sans-serif; text-align: center; padding: 15px; }
@@ -27,10 +27,10 @@
     <h2>⚡ CPM TURBO MASTER</h2>
     
     <div class="mode-selector">
-        <label style="font-size: 12px; color: #aaa;">SELECT MODE:</label>
+        <label style="font-size: 11px; color: #aaa;">PROCESS MODE:</label>
         <select id="workMode" onchange="toggleInputs()">
-            <option value="pass">Only Pass Change</option>
-            <option value="email">Only Email Change (Auto-Number)</option>
+            <option value="pass">Only Password Change</option>
+            <option value="email">Only Email Change (Random)</option>
             <option value="both">Both (Email & Pass Change)</option>
         </select>
     </div>
@@ -38,18 +38,18 @@
     <textarea id="list" placeholder="Email:OldPass (Paste list here)"></textarea>
     
     <div id="emailFields" style="display:none;">
-        <input type="text" id="baseEmail" placeholder="New Email Base (e.g., flame)">
-        <input type="number" id="startNum" placeholder="Starting Number (e.g., 1)" value="1">
+        <input type="text" id="baseEmail" placeholder="New Email Base (e.g. flame)">
+        <input type="number" id="digitCount" placeholder="How many random digits? (e.g. 4)" value="4">
     </div>
     
-    <input type="text" id="newpass" placeholder="New Password to Set">
+    <input type="text" id="newpass" placeholder="Enter New Password to Set">
     
     <select id="ver">
-        <option value="AIzaSyCQDz9rgjgmvmFkvVfmvr2-7fT4tfrzRRQ">CPM 2 (Recommended)</option>
+        <option value="AIzaSyCQDz9rgjgmvmFkvVfmvr2-7fT4tfrzRRQ">CPM 2 (Fastest)</option>
         <option value="AIzaSyAe_aOVT1gSfmHKBrorFvX4fRwN5nODXVA">CPM 1</option>
     </select>
 
-    <button onclick="startTurbo()">🚀 START PROCESS</button>
+    <button onclick="startTurbo()">🚀 START RANDOM TURBO</button>
 
     <div class="res-area">
         <div id="status">Logs will appear here...</div>
@@ -66,7 +66,7 @@
         let passField = document.getElementById('newpass');
         
         emailFields.style.display = (mode === 'email' || mode === 'both') ? 'block' : 'none';
-        passField.placeholder = (mode === 'email') ? "Current Password (Required for login)" : "Enter New Password to Set";
+        passField.placeholder = (mode === 'email') ? "Current Password (Needed for login)" : "Enter New Password to Set";
     }
 
     async function startTurbo() {
@@ -74,34 +74,42 @@
         let listStr = document.getElementById('list').value.trim();
         let newP = document.getElementById('newpass').value.trim();
         let baseE = document.getElementById('baseEmail').value.trim();
-        let startN = parseInt(document.getElementById('startNum').value);
+        let dCount = parseInt(document.getElementById('digitCount').value);
         let key = document.getElementById('ver').value;
         let log = document.getElementById('status');
         let successBox = document.getElementById('successList');
 
-        if (!listStr || (mode !== 'email' && !newP)) { alert("Data missing!"); return; }
+        if (!listStr) { alert("Please paste your account list!"); return; }
+        if (mode !== 'email' && !newP) { alert("Please enter new password!"); return; }
+        if ((mode === 'email' || mode === 'both') && !baseE) { alert("Please enter email base name!"); return; }
 
         let list = listStr.split('\n');
-        log.innerHTML = `🚀 Mode: ${mode.toUpperCase()} | Count: ${list.length}<br>`;
+        log.innerHTML = `🚀 Mode: ${mode.toUpperCase()} | Random Digits: ${dCount}<br>`;
         successBox.value = ""; 
 
         for (let i = 0; i < list.length; i++) {
             let line = list[i].trim();
             if (!line.includes(':')) continue;
             let [oldE, oldP] = line.split(':');
+
+            // --- RANDOM NUMBER GENERATION ---
+            let min = Math.pow(10, dCount - 1);
+            let max = Math.pow(10, dCount) - 1;
+            let randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
             
-            // Target Data setup based on mode
-            let targetEmail = (mode === 'email' || mode === 'both') ? `${baseE}${startN + i}@gmail.com` : oldE.trim();
+            let targetEmail = (mode === 'email' || mode === 'both') ? `${baseE}${randomNum}@gmail.com` : oldE.trim();
             let targetPass = (mode === 'pass' || mode === 'both') ? newP : oldP.trim();
 
             await processAcc(oldE.trim(), oldP.trim(), targetEmail, targetPass, mode, key, log, successBox);
+            // Turbo Speed Delay
             await new Promise(r => setTimeout(r, 100));
         }
+        log.innerHTML += "🏁 --- ALL PROCESS COMPLETED ---<br>";
     }
 
     async function processAcc(e, p, targetE, targetP, mode, key, log, successBox) {
         try {
-            // 1. Login
+            // Step 1: Login to get token
             let res1 = await fetch(`https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=${key}`, {
                 method: 'POST',
                 body: JSON.stringify({ email: e, password: p, returnSecureToken: true }),
@@ -112,11 +120,16 @@
             if (d1.idToken) {
                 let updateData = { idToken: d1.idToken, returnSecureToken: true };
                 
-                if (mode === 'pass') updateData.password = targetP;
-                else if (mode === 'email') updateData.email = targetE;
-                else if (mode === 'both') { updateData.email = targetE; updateData.password = targetP; }
+                if (mode === 'pass') {
+                    updateData.password = targetP;
+                } else if (mode === 'email') {
+                    updateData.email = targetE;
+                } else if (mode === 'both') {
+                    updateData.email = targetE;
+                    updateData.password = targetP;
+                }
 
-                // 2. Update
+                // Step 2: Update credentials
                 let res2 = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${key}`, {
                     method: 'POST',
                     body: JSON.stringify(updateData),
@@ -127,22 +140,25 @@
                     log.innerHTML += `<span class="suc">✅ OK: ${e} -> ${targetE}</span><br>`;
                     successBox.value += `${targetE}:${targetP}\n`;
                 } else {
-                    log.innerHTML += `<span class="err">❌ UPDATE FAIL: ${e}</span><br>`;
+                    let d2 = await res2.json();
+                    log.innerHTML += `<span class="err">❌ UPDATE FAIL: ${e} (${d2.error.message})</span><br>`;
                 }
             } else {
-                log.innerHTML += `<span class="err">⚠️ LOGIN ERROR: ${e}</span><br>`;
+                log.innerHTML += `<span class="err">⚠️ LOGIN ERROR: ${e} (Wrong pass or limited)</span><br>`;
             }
         } catch (err) {
-            log.innerHTML += `<span class="err">❗ ERROR: ${e}</span><br>`;
+            log.innerHTML += `<span class="err">❗ NETWORK ERROR: ${e}</span><br>`;
         }
         log.scrollTop = log.scrollHeight;
+        successBox.scrollTop = successBox.scrollHeight;
     }
 
     function copyResult() {
         let copyText = document.getElementById("successList");
+        if (!copyText.value) { alert("List is empty!"); return; }
         copyText.select();
         document.execCommand("copy");
-        alert("Copied!");
+        alert("Success list copied to clipboard!");
     }
 </script>
 
